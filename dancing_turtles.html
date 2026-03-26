@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Dancing Turtles</title>
+  <style>
+    body { margin: 0; background: black; display: flex; justify-content: center; align-items: center; height: 100vh; }
+    canvas { display: block; }
+  </style>
+</head>
+<body>
+<canvas id="c" width="800" height="600"></canvas>
+<script>
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+const NUM = 8;
+const COLORS = ['red','orange','yellow','lime','cyan','dodgerblue','violet','magenta'];
+let frame = 0;
+
+function drawTurtle(ctx, x, y, angle, scale, color) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(angle);
+  ctx.scale(scale, scale);
+
+  // Body
+  ctx.beginPath();
+  ctx.ellipse(0, 0, 18, 22, 0, 0, Math.PI * 2);
+  ctx.fillStyle = color;
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  // Shell pattern
+  ctx.beginPath();
+  ctx.ellipse(0, 0, 12, 15, 0, 0, Math.PI * 2);
+  ctx.strokeStyle = 'rgba(0,0,0,0.4)';
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+
+  // Head
+  ctx.beginPath();
+  ctx.arc(0, -26, 8, 0, Math.PI * 2);
+  ctx.fillStyle = color;
+  ctx.fill();
+
+  // Eyes
+  ctx.beginPath();
+  ctx.arc(-3, -28, 2, 0, Math.PI * 2);
+  ctx.arc(3, -28, 2, 0, Math.PI * 2);
+  ctx.fillStyle = 'white';
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(-3, -28, 1, 0, Math.PI * 2);
+  ctx.arc(3, -28, 1, 0, Math.PI * 2);
+  ctx.fillStyle = 'black';
+  ctx.fill();
+
+  // Legs
+  const legPositions = [[-16, -10], [16, -10], [-16, 10], [16, 10]];
+  const legAngles = [
+    Math.sin(frame * 0.1) * 0.5,
+    -Math.sin(frame * 0.1) * 0.5,
+    -Math.sin(frame * 0.1) * 0.5,
+    Math.sin(frame * 0.1) * 0.5
+  ];
+  legPositions.forEach(([lx, ly], i) => {
+    ctx.save();
+    ctx.translate(lx, ly);
+    ctx.rotate(legAngles[i]);
+    ctx.beginPath();
+    ctx.ellipse(0, 0, 6, 10, lx < 0 ? -0.5 : 0.5, 0, Math.PI * 2);
+    ctx.fillStyle = color;
+    ctx.fill();
+    ctx.restore();
+  });
+
+  // Tail
+  ctx.beginPath();
+  ctx.ellipse(0, 26, 4, 7, Math.sin(frame * 0.15) * 0.5, 0, Math.PI * 2);
+  ctx.fillStyle = color;
+  ctx.fill();
+
+  ctx.restore();
+}
+
+function animate() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // Background glow
+  const grad = ctx.createRadialGradient(400, 300, 50, 400, 300, 350);
+  grad.addColorStop(0, 'rgba(20,20,60,1)');
+  grad.addColorStop(1, 'rgba(0,0,0,1)');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, 800, 600);
+
+  // Dance floor circles
+  for (let r = 200; r > 0; r -= 40) {
+    ctx.beginPath();
+    ctx.arc(400, 300, r, 0, Math.PI * 2);
+    ctx.strokeStyle = `rgba(255,255,255,${0.03 + 0.01 * Math.sin(frame * 0.05)})`;
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  }
+
+  const t = frame * 0.04;
+  for (let i = 0; i < NUM; i++) {
+    const baseAngle = (2 * Math.PI / NUM) * i + t;
+    const radius = 150 + 60 * Math.sin(t * 2 + i);
+    const bob = 20 * Math.sin(t * 3 + i * 0.8);
+    const x = 400 + radius * Math.cos(baseAngle);
+    const y = 300 + radius * Math.sin(baseAngle) + bob;
+    const facing = baseAngle + Math.PI / 2;
+    const scale = 1.2 + 0.4 * Math.sin(t * 2 + i);
+
+    // Glow under turtle
+    const glow = ctx.createRadialGradient(x, y, 0, x, y, 40 * scale);
+    glow.addColorStop(0, COLORS[i].replace(')', ', 0.3)').replace('rgb', 'rgba'));
+    glow.addColorStop(1, 'transparent');
+    ctx.beginPath();
+    ctx.arc(x, y, 40 * scale, 0, Math.PI * 2);
+    ctx.fillStyle = glow;
+    ctx.fill();
+
+    drawTurtle(ctx, x, y, facing, scale, COLORS[i]);
+  }
+
+  // Title
+  ctx.font = 'bold 28px sans-serif';
+  ctx.fillStyle = 'rgba(255,255,255,0.7)';
+  ctx.textAlign = 'center';
+  ctx.fillText('Dancing Turtles', 400, 50);
+
+  frame++;
+  requestAnimationFrame(animate);
+}
+
+animate();
+</script>
+</body>
+</html>
